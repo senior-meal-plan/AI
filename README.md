@@ -1,0 +1,15 @@
+랭체인:
+도큐먼트 로더 / 벡터 DB - RAG 읽어오기
+
+랭체인을 통해 메모리 저장 가능 !!
+
+RAG - Native / Advanced / Modular
+
+데이터 -> 가공 -> VectorDB로 저장
+
+어떤 데이터를 사용할 것인지
+VectorDB를 만드는 로직(기존 데이터 전처리, 벡터화 방식)
+VectorDB를 불러오는(검색하는) 로직(retrieval)
+VectorDB에서 불러온 내용을 기존 모델과 합치는 로직(Augmented)
+어떤 AI 모델을 사용할 것인지
+메모리 어떻게 저장할 것인지 ==> 랭체인 사용(파이썬에 있음)

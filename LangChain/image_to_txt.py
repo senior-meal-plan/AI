@@ -1,3 +1,9 @@
+# --------------------
+# 이미지를 받아서 그 안에 있는 음식을 텍스트로 바꿔주는 모듈
+# 김 10g, 밥 20g같은 식으로 말해준다
+# --------------------
+
+
 import os
 import base64
 from dotenv import load_dotenv

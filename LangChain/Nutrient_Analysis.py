@@ -1,4 +1,7 @@
-# mealID 포맷 생각하기
+# --------------------
+# 음식에 대한 텍스트가 들어오면 영양 성분을 분석해주는 모듈
+# body_format 수정 필요
+# --------------------
 
 import os
 from dotenv import load_dotenv
@@ -8,7 +11,11 @@ from langchain_core.messages import HumanMessage, SystemMessage
 load_dotenv()
 
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(model="gpt-4o")  #gpt 모델 설정
+llm = ChatOpenAI(
+    model="gpt-4o",
+    temperature=0.0,
+    model_kwargs={"response_format": {"type": "json_object"}}
+)
 
 body_format = """
 {
@@ -38,6 +45,7 @@ messages = [
     SystemMessage("""
                   다음의 body 양식에 맞춰서 json 정보 리턴해줘.
                   만약 여러 음식에 대한 정보가 들어오면, foods에 각각의 음식에 대해 저장해.
+                  Summary와 Severity는 한국어로 작성해.
                   이외의 텍스트는 덧붙이지 마. \n"""
                   + body_format)
 ]

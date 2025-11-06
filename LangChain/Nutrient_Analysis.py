@@ -20,13 +20,14 @@ llm = ChatOpenAI(
 body_format = """
 {
     "mealId": 0,
+    "mealDate": "2025-11-01",
+    "mealTime": "00:00:00",
+    "mealType": "string",
     "totalKcal": 0,
     "totalProtein": 0,
     "totalCarbs": 0,
     "totalFat": 0,
     "totalCalcium": 0,
-    "Summary": "string",
-    "Severity": "string",
     "foods": [
         {
             "name": "string",
@@ -35,7 +36,17 @@ body_format = """
             "carbs": 0,
             "fat": 0,
             "calcium": 0,
-            "servingSize": 0
+            "servingSize": 0,
+            "saturatedFatPercentKcal": 0,
+            "unsaturatedFat": 0,
+            "dietaryFiber": 0,
+            "sodium": 0,
+            "addedSugarKcal": 0,
+            "processedMeatGram": 0,
+            "vitaminD_IU": 0,
+            "isVegetable": true,
+            "isFruit": true,
+            "isFried": true
         }
     ]
 }

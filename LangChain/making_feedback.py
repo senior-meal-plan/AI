@@ -4,15 +4,22 @@
 # 질환별 채점한 점수도 받아서 잘했다 못했다 판단(일단은 단순 하드코딩)
 # --------------------
 
+import os, json
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 def weekly_scoresheet(response):
     # --------------------
     # 일주일분의 데일리 스코어를 score_sum에 합산
     # 평균 내고, 0~60 / 60~80 / 80~100 구간으로 나쁨 / 괜찮음 / 좋음 판단
     # --------------------
     score_sum = 0
-    num_reports = len(response["dailyreports"])
+    num_reports = len(response["dailyReports"])
     for i in range(num_reports):
-        score_sum += response.dailyreports[i].summarizeScore
+        score_sum += response["dailyReports"][i]["summarizeScore"]
     average = score_sum / num_reports
 
     state = ""
@@ -31,7 +38,7 @@ def new_health_goals(response):
     # 각 질환별로 평균을 낸 후, 10점 밑인 질환 상태가 있다면 목표로 리턴
     # --------------------
 
-    num_reports = len(response["dailyreports"])
+    num_reports = len(response["dailyReports"])
 
     macular_degeneration_score_sum = 0
     hypertension_score_sum = 0
@@ -41,12 +48,12 @@ def new_health_goals(response):
     bone_disease_score_sum = 0
 
     for i in range(num_reports):
-        macular_degeneration_score_sum += response.dailyreports[i].macularDegenerationScore
-        hypertension_score_sum += response.dailyreports[i].hypertensionScore
-        myocardial_infarction_score_sum += response.dailyreports[i].myocardialInfarctionScore
-        sarcopenia_score_sum += response.dailyreports[i].sarcopeniaScore
-        hyperlipidemia_score_sum += response.dailyreports[i].hyperlipidemiaScore
-        bone_disease_score_sum += response.dailyreports[i].boneDiseaseScore
+        macular_degeneration_score_sum += response["dailyReports"][i]["macularDegenerationScore"]
+        hypertension_score_sum += response["dailyReports"][i]["hypertensionScore"]
+        myocardial_infarction_score_sum += response["dailyReports"][i]["myocardialInfarctionScore"]
+        sarcopenia_score_sum += response["dailyReports"][i]["sarcopeniaScore"]
+        hyperlipidemia_score_sum += response["dailyReports"][i]["hyperlipidemiaScore"]
+        bone_disease_score_sum += response["dailyReports"][i]["boneDiseaseScore"]
     
     macular_degeneration_average = macular_degeneration_score_sum / num_reports
     hypertension_average = hypertension_score_sum / num_reports
@@ -57,7 +64,7 @@ def new_health_goals(response):
 
     disease_list = [macular_degeneration_average, hypertension_average, myocardial_infarction_average, sarcopenia_average, hyperlipidemia_average, bone_disease_average]
 
-    health_goals = ["건강목표 1", "건강목표 2..."]
+    health_goals = []
 
     for i in range(len(disease_list)):
         if disease_list[i] <= 10:
@@ -77,24 +84,41 @@ def new_health_goals(response):
     return health_goals
 
 def recommand_recipe(response):
+    # --------------------
     # 일주일치 모든 식사 내역, 유저의 건강 목표를 받는다
-    # 유저의 건강 목표를 바탕으로, 이번주 식사 내역에서 부족한 영양소를 체크해, DB에서 레시피를 골라 추천
+    # 유저의 건강 목표를 바탕으로, 이번주 식사 내역에서 부족한 영양소를 체크
+    # DB 접속 안하고 텍스트파일 참조하는 방식
+    # --------------------
+    return 1
 
 def weekly_health_guide(response):
-    # 일주일치 모든 식사 내역을 받는다
-    # AI를 활용해 식사 피드백 도출
+    # --------------------
+    # 일주일치 모든 식사 내역을 받은 후, AI를 활용해 개인 맞춤형 식사 피드백을 도출한다
+    # 점수 채점 및 피드백을 한번에 모든 유저를 받아서 -> 분석 되는대로 리턴
+    # 명세: 분석 요청반환
+    # --------------------
+    feedback = ""
+    return feedback
+
+def daily_health_guide(response):
+    # --------------------
+    # 하루 식사 내용을 받은 후, AI를 활용해 개인 맞춤형 식사 피드백을 도출한다
+    # 점수 채점 및 피드백을 한번에 모든 유저를 받아서 -> 분석 되는대로 리턴
+    # 명세: 분석 요청반환
+    # --------------------
+    feedback = ""
+    return feedback
+
+def meal_health_guide(response):
+    # --------------------
+    # 1회의 식사 내역을 받은 후, AI를 활용해 개인 맞춤형 식사 피드백을 도출한다
+    # 점수 채점 및 피드백을 한번에 모든 유저를 받아서 -> 분석 되는대로 리턴
+    # 명세: 분석 요청반환
+    # --------------------
+    feedback = ""
+    return feedback
 
 
-"""
-    일주일치 모든 식단은 아래와 같이 담겨서 온다
-    {
-    "meals" : ["meal1", "meal2"...]
-    }
-
-    스코어 접근:response 라는 변수에 대해
-    response.dailyreports[n].특정스코어 식으로 접근
-    유저 정보는 response.user.정보
-"""
 
 if __name__ == "__main__":
     response = {}

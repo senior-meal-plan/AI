@@ -1,9 +1,13 @@
 # --------------------
 # 음식에 대한 텍스트가 들어오면 영양 성분을 분석해주는 모듈
-# body_format 수정 필요
+# analyze_meal : 음식 텍스트를 받아 분석함
+# _extract_json : {} 블록만 추출
+# load_json_safely : 문자열 딕셔너리 변환
+# recompute_totals : 총 음식 정보 수정 (각각의 음식은 잘 계산하는데 총 정보가 깨지는 경우가 있었음)
+# nutrient_analysis : 양식 에러가 나지 않도록 정적으로 작업한 파이프라인
 # --------------------
 
-import os
+import os, json, re
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -61,11 +65,49 @@ messages = [
                   + body_format)
 ]
 
+
+
 def analyze_meal(user_input: str) -> str:
     messages.append(HumanMessage(user_input))
     ai_response = llm.invoke(messages)
     messages.append(ai_response)
     return ai_response.content
+
+def _extract_json(text: str) -> str:
+    if not isinstance(text, str):
+        raise TypeError("JSON 텍스트가 str가 아닙니다.")
+    m = re.search(r"\{.*\}", text, flags=re.DOTALL)
+    return m.group(0) if m else text
+
+def load_json_safely(text: str) -> dict:
+    text = _extract_json(text).strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        fixed = text.replace("'", '"')
+        return json.loads(fixed)
+
+def recompute_totals(d: dict) -> dict:
+    kcal = prot = carbs = fat = ca = 0.0
+    for f in d.get("foods", []) or []:
+        kcal  += float(f.get("kcal", 0) or 0)
+        prot  += float(f.get("protein", 0) or 0)
+        carbs += float(f.get("carbs", 0) or 0)
+        fat   += float(f.get("fat", 0) or 0)
+        ca    += float(f.get("calcium", 0) or 0)
+    d["totalKcal"]     = round(kcal, 2)
+    d["totalProtein"]  = round(prot, 2)
+    d["totalCarbs"]    = round(carbs, 2)
+    d["totalFat"]      = round(fat, 2)
+    d["totalCalcium"]  = round(ca, 2)
+    return d
+
+
+def nutrient_analysis(user_input):
+    json_str = analyze_meal(user_input)
+    result = load_json_safely(json_str)
+    result = recompute_totals(result)
+    return result
 
 
 if __name__ == "__main__":
@@ -82,3 +124,4 @@ if __name__ == "__main__":
         messages.append(ai_response)
 
         print("AI: "+ai_response.content)
+        

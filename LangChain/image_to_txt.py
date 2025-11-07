@@ -1,6 +1,8 @@
 # --------------------
 # 이미지를 받아서 그 안에 있는 음식을 텍스트로 바꿔주는 모듈
 # 김 10g, 밥 20g같은 식으로 말해준다
+# path_to_data_url : 이미지 파일을 base64 data URL로 변환
+# analyze_image_to_text : 이미지를 재료 문자열로 변환
 # --------------------
 
 
@@ -27,7 +29,7 @@ SYSTEM_PROMPT = """
         JSON, 표, 코드블록을 쓰지 말고, 오직 위와 같은 한 줄짜리 문자열만 출력해.
     """
 
-# 이미지 파일 → base64 data URL 변환
+
 def path_to_data_url(path: str) -> str:
     ext = os.path.splitext(path)[1].lower()
     mime = "image/jpeg"
@@ -42,7 +44,6 @@ def path_to_data_url(path: str) -> str:
         b64 = base64.b64encode(f.read()).decode("utf-8")
     return f"data:{mime};base64,{b64}"
 
-# 이미지 → 재료 문자열
 def analyze_image_to_text(image_path: str) -> str:
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"이미지 파일을 찾을 수 없습니다: {image_path}")
@@ -59,7 +60,6 @@ def analyze_image_to_text(image_path: str) -> str:
 
     response = llm.invoke(messages)
     return response.content.strip()
-
 
 
 if __name__ == "__main__":

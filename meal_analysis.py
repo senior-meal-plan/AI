@@ -10,6 +10,7 @@
 #    "age": 1073741824,
 #    "userHeight": 0,
 #    "userWeight": 0,
+#    "Gender": "string",
 #    "toics": [
 #      {
 #        "topicId": 9007199254740991,
@@ -99,8 +100,8 @@ body_format = """
 
 
 # --------------------
-# 사진을 읽어오는 함수들
-# path_to_data_url : photoUrl을 받아서 경로로 변환
+# 사진을 읽어오는 함수
+# path_to_data_url : photoUrl을 받아서 용량을 축소하고 경로로 변환
 # analyze_image_to_text : path_to_data_url에서 추출된 경로를 받아 사진을 텍스트 형태(밥 100g, 연어 50g...)로 변환
 # --------------------
 
@@ -176,7 +177,6 @@ def analyze_image_to_text(image_path: str) -> str:
     except Exception as e:
         print(f"API Error: {type(e).__name__}: {e}")
         raise
-
 
 
 
@@ -258,6 +258,7 @@ def recompute_totals(d: dict) -> dict:
 # --------------------
 # 메인 함수
 # --------------------
+
 def meal_analysis(meal: dict):
     meal_text = analyze_image_to_text(meal["photoUrl"])
 
@@ -269,6 +270,10 @@ def meal_analysis(meal: dict):
 
     return result
 
+
+# --------------------
+# 테스트용 코드
+# --------------------
 
 if __name__ == "__main__":
 
@@ -282,6 +287,7 @@ if __name__ == "__main__":
             "age": 72,
             "userHeight": 160,
             "userWeight": 58,
+            "Gender": "여성",
             "toics": [
                 {
                     "topicId": 1,

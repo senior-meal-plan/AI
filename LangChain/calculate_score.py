@@ -23,6 +23,8 @@ SYSTEM_PROMPT_BASIC = """
             Smeals = 5 × 평균(max(0, 1 − ⅓(|cm − 0.50|/0.12 + |pm − 0.20|/0.12 + |fm − 0.30|/0.12)))
     """
 
+SYSTEM_PROMPT_DISEASE = """
+    """
 
 def ai_calculate_nutrition_score(meal_json: dict):
     # 1️⃣ 수식 프롬프트

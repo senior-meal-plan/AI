@@ -5,11 +5,19 @@
 # --------------------
 
 import os, json
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+llm = ChatOpenAI(
+    model="gpt-4o",
+    temperature=0.0,
+    model_kwargs={"response_format": {"type": "json_object"}}
+)
+
 
 def weekly_scoresheet(response):
     # --------------------
@@ -113,15 +121,131 @@ def meal_health_guide(response):
     # --------------------
     # 1회의 식사 내역을 받은 후, AI를 활용해 개인 맞춤형 식사 피드백을 도출한다
     # 점수 채점 및 피드백을 한번에 모든 유저를 받아서 -> 분석 되는대로 리턴
-    # 명세: 분석 요청반환
     # --------------------
-    feedback = ""
+
+    body_format = """
+    {
+        "reportId": 9007199254740991,
+        "status": "string",
+        "errorMessage": "string",
+        "totalKcal": 0,
+        "totalProtein": 0,
+        "totalCarbs": 0,
+        "totalFat": 0,
+        "totalCalcium": 0,
+        "summary": "string",
+        "severity": "string",
+        "summarizeScore": 0,
+        "basicScore": 0,
+        "macularDegenerationScore": 0,
+        "hypertensionScore": 0,
+        "myocardialInfarctionScore": 0,
+        "sarcopeniaScore": 0,
+        "hyperlipidemiaScore": 0,
+        "boneDiseaseScore": 0
+    }
+    """
+
+    messages = [
+        SystemMessage("""
+                      너는 전문 건강 관리사야. 사람들의 식단을 보고 건강 피드백을 하는 역할을 해야 해.
+                      다음의 body 양식에 정확히 일치하는 json 정보 리턴해줘. 그 외 텍스트는 금지야.
+
+                      1) 중요한 정보
+                        - status에는 오늘 식사가 어떤 점 때문에 좋았거나 나빴는지 한 줄 요약을 해줘. (예시: 야채를 많이 먹은 건강한 식사입니다!, 포화지방을 너무 많이 드신 나쁜 식사입니다.)
+                        - summary에서는 식사를 꼼꼼히 분석해서 3~5줄의 리포트를 작성해줘. Foods에 있는 구체적인 음식 항목을 언급하면서 어떤 점이 좋고 나쁜지 자세하게 말해줘.
+                        - severity는 INFO / WARNING / ALERT 셋 중 하나로 채워줘. 건강에 큰 이상 없으면 INFO, 경고가 필요하면 WARNING, 당장 조치가 필요하면 ALERT야.
+                      
+                      2) 기타 값 채우기
+                        - reportId는 response에 있는 mealId를 그대로 넣어줘.
+                        - errorMessage는 ""으로 비워줘.
+                        - totalKcal, totalProtein, totalCarbs, totalFat, totalCalcium은 response에서 받아온 값을 그대로 넣어줘.
+                        - Score가 붙은 것들은 전부 0을 넣어줘.
+                      
+                      \n """ + body_format),
+        HumanMessage(json.dumps(response, ensure_ascii=False))
+    ]
+    
+    feedback = llm.invoke(messages)
+
+    if not isinstance(feedback, dict):
+        feedback = {}
+    if feedback["summary"] == "":
+        feedback["errorMessage"] = "EmptyError"
+    
     return feedback
 
 
 
-if __name__ == "__main__":
-    response = {}
 
-    print(weekly_scoresheet(response))
-    print(new_health_goals(response))
+
+
+
+
+if __name__ == "__main__":
+
+    meal_example = {
+        "mealId": 1,
+        "totalKcal": 800,
+        "totalProtein": 400,
+        "totalCarbs": 400,
+        "totalFat": 400,
+        "totalCalcium": 400,
+        "Summary": "잘했음",
+        "Severity": "INFO",
+        "isDairyIntake": true,
+        "isVitaminCIntake": true,
+        "isVitaminBIntake": true,
+        "isFishIntake": true,
+        "isNutsIntake": true,
+        "isVegetableOilIntake": true,
+        "isUnrefinedCarbsIntake": true,
+        "foods": [
+            {
+                "name": "아이스",
+                "kcal": 400,
+                "protein": 100,
+                "carbs": 100,
+                "fat": 100,
+                "calcium": 100,
+                "servingSize": 1,
+                "saturatedFatPercentKcal": 100,
+                "unsaturatedFat": 100,
+                "dietaryFiber": 100,
+                "sodium": 100,
+                "addedSugarKcal": 100,
+                "processedMeatGram": 100,
+                "vitaminD_IU": 100,
+                "isVegetable": true,
+                "isFruit": true,
+                "isFried": true
+            },
+            {
+                "name": "크림",
+                "kcal": 300,
+                "protein": 100,
+                "carbs": 100,
+                "fat": 100,
+                "calcium": 100,
+                "servingSize": 1,
+                "saturatedFatPercentKcal": 100,
+                "unsaturatedFat": 100,
+                "dietaryFiber": 100,
+                "sodium": 100,
+                "addedSugarKcal": 100,
+                "processedMeatGram": 100,
+                "vitaminD_IU": 100,
+                "isVegetable": true,
+                "isFruit": true,
+                "isFried": true
+            }
+        ]
+    }
+
+    print(meal_health_guide(meal_example))
+
+
+    #response = {}
+
+    #print(weekly_scoresheet(response))
+    #print(new_health_goals(response))

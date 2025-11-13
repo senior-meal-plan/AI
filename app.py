@@ -1,11 +1,15 @@
 import os, requests, asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Body
 from dotenv import load_dotenv
 
 from meal_analysis import meal_analysis
 from daily_analysis import daily_analysis
 from weekly_analysis import weekly_analysis
+
+
+
 
 load_dotenv()
 
@@ -93,7 +97,7 @@ async def send_weekly_analysis(weekly_data: dict):
 
 
 @app.post("/meals/analyze-and-send")
-async def analyze_meal_report(meal_list: list):
+async def analyze_meal_report(meal_list: list = Body(...)):
     tasks = []
     for meal in meal_list:
         task = asyncio.create_task(send_meal_analysis(meal))
@@ -101,7 +105,7 @@ async def analyze_meal_report(meal_list: list):
     return {"message": f"{len(tasks)} meals are being processed asynchronously."}
 
 @app.post("/daily/analyze-and-send")
-async def analyze_daily_report(daily_list: list):
+async def analyze_daily_report(daily_list: list = Body(...)):
     tasks = []
     for daily in daily_list:
         task = asyncio.create_task(send_daily_analysis(daily))
@@ -109,9 +113,36 @@ async def analyze_daily_report(daily_list: list):
     return {"message": f"{len(tasks)} daily reports are being processed asynchronously."}
     
 @app.post("/weekly/analyze-and-send")
-async def analyze_seekly_report(weekly_list: list):
+async def analyze_seekly_report(weekly_list: list = Body(...)):
     tasks = []
     for weekly in weekly_list:
         task = asyncio.create_task(send_weekly_analysis(weekly))
         tasks.append(task)
     return {"message": f"{len(tasks)} weekly reports are being processed asynchronously."}
+
+
+
+
+
+#잘 들어오는지 테스트용 api 엔드포인트
+
+@app.post("/api/v1/webhooks/meals/analysis-result")
+async def debug_meal_webhook(payload: dict = Body(...)):
+    print("\n[WEBHOOK] meal report 결과 도착 ======================")
+    print(payload)
+    print("===========================================\n")
+    return {"status": "ok"}
+
+@app.post("/api/v1/webhooks/daily/reports/daily-analysis-complete")
+async def debug_meal_webhook(payload: dict = Body(...)):
+    print("\n[WEBHOOK] daily report 결과 도착 ======================")
+    print(payload)
+    print("===========================================\n")
+    return {"status": "ok"}
+
+@app.post("/api/v1/webhooks/weekly/analysis-complete")
+async def debug_meal_webhook(payload: dict = Body(...)):
+    print("\n[WEBHOOK] weekly report 결과 도착 ======================")
+    print(payload)
+    print("===========================================\n")
+    return {"status": "ok"}

@@ -1,6 +1,5 @@
 # 점수 계산 코드 만들기
-# AI의 평가 코드 만들기
-# 샘플 데이터 수정해서 서버 테스트
+# 서버 테스트
 
 
 # 받는 데이터 형식:
@@ -65,7 +64,6 @@
 # --------------------
 
 import os, json, re, base64, io, requests
-from PIL import Image
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -120,24 +118,31 @@ body_format = {
 # --------------------
 
 def basic_score(daily: dict):
+    basicScore = 60
     return basicScore
 
 def macular_score(daily: dict):
+    macularDegenerationScore = 10
     return macularDegenerationScore
 
 def hypertension_score(daily: dict):
+    hypertensionScore = 20
     return hypertensionScore
 
 def myocardial_score(daily: dict):
+    myocardialInfarctionScore = 15
     return myocardialInfarctionScore
 
 def sarcopenia_score(daily: dict):
+    sarcopeniaScore = 10
     return sarcopeniaScore
 
 def hyperlipidemia_score(daily: dict):
+    hyperlipidemiaScore = 5
     return hyperlipidemiaScore
 
 def bone_score(daily: dict):
+    boneDiseaseScore = 5
     return boneDiseaseScore
 
 
@@ -215,10 +220,68 @@ def score_sum(daily: dict, result: dict):
 
 # --------------------
 # AI 평가 함수
-# summary: 지피티가 요약하기
-# severity: GOOD SOSO BAD 중에 고르기
+# feedback: AI가 피드백을 주어 summary와 severity를 입력하는 함수
 # --------------------
 
+def feedback(daily: dict, result: dict):
+    meals_text = json.dumps(daily["meals"], ensure_ascii = False, indent = 2)
+    system_prompt = """
+        너는 60~80대 어르신의 하루 식단을 평가하는 영양사 AI야.
+
+        [해야 할 일]
+        1. 하루 동안 먹은 모든 식사를 보고, 건강 측면에서 간단히 평가해라.
+        2. 아래 두 가지 값을 JSON 형식으로만 반환해야 한다.
+
+        [summary 작성 규칙]
+        - 한국어로 2~3문장으로 작성한다.
+        - 존댓말(친절하고 부드러운 말투)을 사용한다.
+        - 탄수화물/단백질/지방의 균형, 채소·과일 섭취 여부, 짠 음식·기름진 음식·단 음식·가공육 여부 등 주요 특징을 꼭 언급한다.
+        - 개선이 필요한 점이 있으면 구체적으로 한두 가지 정도만 짚어서 제안해 준다.
+        - 지나치게 무섭게 말하지 말고, "다음에는 이렇게 해보시면 더 좋겠습니다." 같은 톤으로 말한다.
+
+        [severity 규칙]
+        - 아래 셋 중 하나만 사용해야 한다. (다른 문자열 절대 금지)
+            - "GOOD": 전반적으로 균형이 괜찮고 큰 문제는 없을 때
+            - "SOSO": 대체로 괜찮지만 짜게 먹거나, 기름기·당류가 조금 많은 등 주의가 필요한 부분이 있을 때
+            - "BAD" : 아주 짜거나, 매우 기름지거나, 단 음식/튀김/가공육 위주의 식단처럼 건강에 좋지 않은 편일 때
+
+        [출력 형식 - 반드시 이 JSON 구조만 반환]
+        {
+          "summary": "여기에 2~3문장 요약",
+          "severity": "GOOD 또는 SOSO 또는 BAD"
+        }
+        기타 설명, 말머리, 코드블록 표시는 절대 붙이지 마라.
+    """
+
+    messages = [
+        SystemMessage(system_prompt),
+        HumanMessage(
+            "다음은 어떤 어르신의 하루 식단 정보입니다.\n"
+            "이 정보를 바탕으로 하루 식단을 평가해 주세요.\n\n"
+            f"{meals_text}"
+        ),
+    ]
+
+    try:
+        ai_response = llm.invoke(messages)
+        parsed = json.loads(ai_response.content)
+
+        summary = str(parsed.get("summary", "")).strip()
+        severity = str(parsed.get("severity", "")).strip().upper()
+
+        if severity not in {"GOOD", "SOSO", "BAD"}:
+            severity = "SOSO"
+
+        result["summary"] = summary
+        result["severity"] = severity
+
+    except Exception as e:
+        result["summary"] = ""
+        result["severity"] = "SOSO"
+        result["status"] = "ERROR"
+        result["errorMessage"] = f"식단 요약 생성 중 오류가 발생했습니다: {e}"
+
+    return result
 
 
 
@@ -233,11 +296,11 @@ def daily_analysis(daily: dict):
     try:
         result = total_sum(daily["meals"], result)
         result = score_sum(daily, result)
+        result = feedback(daily, result)
 
-        # AI 한마디 넣기
-        
-        result["status"] = "SUCCESS"
-        result["errorMessage"] = "none"
+        if result["status"] != "ERROR":        
+            result["status"] = "SUCCESS"
+            result["errorMessage"] = "none"
 
     except Exception as e:
         result = body_format.copy()
@@ -255,7 +318,8 @@ def daily_analysis(daily: dict):
 
 if __name__ == "__main__":
 
-    test_daily = {
+    test_daily_json = """
+    {
         "reportId": 12353,
         "whoAmIDto": {
             "userId": 9007199254740991,
@@ -301,15 +365,15 @@ if __name__ == "__main__":
               "foods": [
                 {
                   "name": "밥",
-                  "kcal": 0,
-                  "protein": 0,
-                  "carbs": 0,
-                  "fat": 0,
-                  "calcium": 0,
-                  "servingSize": 0,
+                  "kcal": 130.0,
+                  "protein": 2.7,
+                  "carbs": 28.2,
+                  "fat": 0.3,
+                  "calcium": 10,
+                  "servingSize": 100,
                   "saturatedFatPercentKcal": 0,
-                  "unsaturatedFat": 0,
-                  "dietaryFiber": 0,
+                  "unsaturatedFat": 0.1,
+                  "dietaryFiber": 0.4,
                   "sodium": 0,
                   "addedSugarKcal": 0,
                   "processedMeatGram": 0,
@@ -320,20 +384,20 @@ if __name__ == "__main__":
                 },
                 {
                   "name": "미역국",
-                  "kcal": 0,
-                  "protein": 0,
-                  "carbs": 0,
-                  "fat": 0,
-                  "calcium": 0,
-                  "servingSize": 0,
-                  "saturatedFatPercentKcal": 0,
-                  "unsaturatedFat": 0,
-                  "dietaryFiber": 0,
-                  "sodium": 0,
+                  "kcal": 80,
+                  "protein": 5,
+                  "carbs": 8,
+                  "fat": 3,
+                  "calcium": 150,
+                  "servingSize": 200,
+                  "saturatedFatPercentKcal": 10,
+                  "unsaturatedFat": 2,
+                  "dietaryFiber": 1,
+                  "sodium": 500,
                   "addedSugarKcal": 0,
                   "processedMeatGram": 0,
                   "vitaminD_IU": 0,
-                  "isVegetable": false,
+                  "isVegetable": true,
                   "isFruit": false,
                   "isFried": false
                 }
@@ -351,17 +415,17 @@ if __name__ == "__main__":
               "foods": [
                 {
                   "name": "돼지갈비",
-                  "kcal": 0,
-                  "protein": 0,
-                  "carbs": 0,
-                  "fat": 0,
-                  "calcium": 0,
-                  "servingSize": 0,
-                  "saturatedFatPercentKcal": 0,
-                  "unsaturatedFat": 0,
+                  "kcal": 300,
+                  "protein": 25,
+                  "carbs": 10,
+                  "fat": 18,
+                  "calcium": 20,
+                  "servingSize": 150,
+                  "saturatedFatPercentKcal": 40,
+                  "unsaturatedFat": 8,
                   "dietaryFiber": 0,
-                  "sodium": 0,
-                  "addedSugarKcal": 0,
+                  "sodium": 500,
+                  "addedSugarKcal": 20,
                   "processedMeatGram": 0,
                   "vitaminD_IU": 0,
                   "isVegetable": true,
@@ -373,7 +437,9 @@ if __name__ == "__main__":
           ],
           "callbackUrl": "string"
         }
-    
+    """
+
+    test_daily = json.loads(test_daily_json)
     result = daily_analysis(test_daily)
 
     print(result)

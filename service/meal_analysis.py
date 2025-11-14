@@ -68,7 +68,7 @@ body_format = """
     "totalFat": 0,
     "totalCalcium": 0,
     "Summary": "잘했음",
-    "Severity": "INFO",
+    "Severity": "GOOD",
     "isDairyIntake": true,
     "isVitaminCIntake": true,
     "isVitaminBIntake": true,

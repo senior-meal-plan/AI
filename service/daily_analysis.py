@@ -1,5 +1,4 @@
-# 점수 계산 코드 만들기
-# 서버 테스트
+# 점수 계산 코드 수정하면 끝난다
 
 
 # 받는 데이터 형식:
@@ -122,19 +121,19 @@ def basic_score(daily: dict):
     return basicScore
 
 def macular_score(daily: dict):
-    macularDegenerationScore = 10
+    macularDegenerationScore = 1
     return macularDegenerationScore
 
 def hypertension_score(daily: dict):
-    hypertensionScore = 20
+    hypertensionScore = 2
     return hypertensionScore
 
 def myocardial_score(daily: dict):
-    myocardialInfarctionScore = 15
+    myocardialInfarctionScore = 3
     return myocardialInfarctionScore
 
 def sarcopenia_score(daily: dict):
-    sarcopeniaScore = 10
+    sarcopeniaScore = 4
     return sarcopeniaScore
 
 def hyperlipidemia_score(daily: dict):
@@ -142,7 +141,7 @@ def hyperlipidemia_score(daily: dict):
     return hyperlipidemiaScore
 
 def bone_score(daily: dict):
-    boneDiseaseScore = 5
+    boneDiseaseScore = 6
     return boneDiseaseScore
 
 

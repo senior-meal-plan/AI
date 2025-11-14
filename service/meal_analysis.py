@@ -1,4 +1,4 @@
-# presigned URL 테스트 필요
+# presigned URL 테스트하고 수정하면 끝
 
 
 # --------------------

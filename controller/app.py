@@ -1,6 +1,3 @@
-# 정보 받는 주소 수정하기 (redis에서 사용하는 .env로)
-
-
 import os, requests, asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +6,7 @@ from dotenv import load_dotenv
 
 from service.meal_analysis import meal_analysis
 from service.daily_analysis import daily_analysis
-#from service.weekly_analysis import weekly_analysis
+from service.weekly_analysis import weekly_analysis
 
 
 
@@ -74,27 +71,27 @@ async def send_daily_analysis(daily_data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
-#async def send_weekly_analysis(weekly_data: dict):
-#    try:
-#        loop = asyncio.get_running_loop()
-#        analysis_result = await loop.run_in_executor(
-#            None, lambda: weekly_analysis(weekly_data)
-#        )
-#
-#        response = await loop.run_in_executor(
-#            None,
-#            lambda: requests.post(
-#                f"{API_BASE_URL}/api/v1/webhooks/weekly/analysis-complete",
-#                json = analysis_result,
-#                timeout = 10,
-#            )
-#        )
-#
-#        if response.status_code != 200:
-#            raise HTTPException(status_code = response.status_code, detail = response.text or "no body")
-#
-#    except Exception as e:
-#        raise HTTPException(status_code=500, detail=str(e))
+async def send_weekly_analysis(weekly_data: dict):
+    try:
+        loop = asyncio.get_running_loop()
+        analysis_result = await loop.run_in_executor(
+            None, lambda: weekly_analysis(weekly_data)
+        )
+
+        response = await loop.run_in_executor(
+            None,
+            lambda: requests.post(
+                f"{API_BASE_URL}/api/v1/webhooks/weekly/analysis-complete",
+                json = analysis_result,
+                timeout = 10,
+            )
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(status_code = response.status_code, detail = response.text or "no body")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
@@ -114,38 +111,10 @@ async def analyze_daily_report(daily_list: list = Body(...)):
         tasks.append(task)
     return {"message": f"{len(tasks)} daily reports are being processed asynchronously."}
     
-#@app.post("/weekly/analyze-and-send")
-#async def analyze_seekly_report(weekly_list: list = Body(...)):
-#    tasks = []
-#    for weekly in weekly_list:
-#        task = asyncio.create_task(send_weekly_analysis(weekly))
-#        tasks.append(task)
-#    return {"message": f"{len(tasks)} weekly reports are being processed asynchronously."}
-
-
-
-
-
-#잘 들어오는지 테스트용 api 엔드포인트(테스트 끝나면 삭제예정)
-
-@app.post("/api/v1/webhooks/meals/analysis-result")
-async def debug_meal_webhook(payload: dict = Body(...)):
-    print("\n[WEBHOOK] meal report 결과 도착 ======================")
-    print(payload)
-    print("===========================================\n")
-    return {"status": "ok"}
-
-@app.post("/api/v1/webhooks/daily/reports/daily-analysis-complete")
-async def debug_meal_webhook(payload: dict = Body(...)):
-    print("\n[WEBHOOK] daily report 결과 도착 ======================")
-    print(payload)
-    print("===========================================\n")
-    return {"status": "ok"}
-
-
-#@app.post("/api/v1/webhooks/weekly/analysis-complete")
-#async def debug_meal_webhook(payload: dict = Body(...)):
-#    print("\n[WEBHOOK] weekly report 결과 도착 ======================")
-#    print(payload)
-#    print("===========================================\n")
-#    return {"status": "ok"}
+@app.post("/weekly/analyze-and-send")
+async def analyze_seekly_report(weekly_list: list = Body(...)):
+    tasks = []
+    for weekly in weekly_list:
+        task = asyncio.create_task(send_weekly_analysis(weekly))
+        tasks.append(task)
+    return {"message": f"{len(tasks)} weekly reports are being processed asynchronously."}

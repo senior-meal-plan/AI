@@ -1,5 +1,29 @@
-def weekly_anlysis(weekly: dict):
-    return 0
+# 현재 깡통 상태임
+
+body_format = {
+  "UserId": 2,
+  "weeklyReport": {
+    "WeeklyReportId": 7,
+    "summaryGoodPoint": "이걸잘했음",
+    "summaryBadPoint": "이걸못했음",
+    "summaryAiRecommend": "물을 더 많이 먹으세요",
+    "severity": "INFO"
+  },
+  "aiRecommendTopic": [
+    "2"
+  ],
+  "aiRecommendRecipe": [
+    1
+  ]
+}
+
+def weekly_analysis(weekly: dict):
+    result = body_format.copy()
+    result["UserId"] = weekly["userDto"]["userId"]
+    result["weeklyReport"]["WeeklyReportId"] = weekly["weeklyReportId"]
+    return result
+
+
 
 
 # --------------------

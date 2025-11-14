@@ -1,3 +1,6 @@
+# presigned URL 테스트 필요
+
+
 # --------------------
 # 받는 데이터 형식:
 # {
@@ -30,7 +33,7 @@
 # 환경설정
 # --------------------
 
-import os, json, re, base64, io
+import os, json, re, base64, io, requests
 from PIL import Image
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -106,38 +109,35 @@ body_format = """
 # --------------------
 
 def path_to_data_url(photoUrl: str, max_size: int = 1024) -> str:
-    try:
-        img = Image.open(photoUrl)
+    resp = requests.get(photoUrl, timeout=15)
+    resp.raise_for_status()
 
-        if max(img.size) > max_size:
-            ratio = max_size / max(img.size)
-            new_size = tuple(int(dim*ratio) for dim in img.size)
-            img = img.resize(new_size, Image.Resampling.LANCZOS)
-            print(f"이미지 리사이즈: {img.size}")
+    img = Image.open(io.BytesIO(resp.content))
+    #img = Image.open(photoUrl)
 
-        if img.mode != 'RGB':
-            img = img.convert('RGB')
+    if max(img.size) > max_size:
+        ratio = max_size / max(img.size)
+        new_size = tuple(int(dim*ratio) for dim in img.size)
+        img = img.resize(new_size, Image.Resampling.LANCZOS)
+        print(f"이미지 리사이즈: {img.size}")
 
-        buffer = io.BytesIO()
-        img.save(buffer, format = 'JPEG', quality = 75) 
-        buffer.seek(0)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    buffer = io.BytesIO()
+    img.save(buffer, format = 'JPEG', quality = 75) 
+    buffer.seek(0)
 
 
-        b64 = base64.b64encode(buffer.read()).decode("utf-8")
-        data_url = f"data:image/jpeg;base64,{b64}"
+    b64 = base64.b64encode(buffer.read()).decode("utf-8")
+    data_url = f"data:image/jpeg;base64,{b64}"
 
-        print(f"Data URL 크기: {len(data_url):,} bytes")
-        return data_url   
-
-    except ImportError:
-        print("Pillow 미설치 - 원본 이미지 사용")
-        with open(photoUrl, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode("utf-8")
-        return f"data:image/jpeg;base64,{b64}"
+    print(f"Data URL 크기: {len(data_url):,} bytes")
+    return data_url   
 
 def analyze_image_to_text(image_path: str) -> str:
-    if not os.path.exists(image_path):
-        raise FileNotFoundError(f"이미지 파일을 찾을 수 없습니다: {image_path}")
+    # if not os.path.exists(image_path):
+    #    raise FileNotFoundError(f"이미지 파일을 찾을 수 없습니다: {image_path}")
 
     data_url = path_to_data_url(image_path)
 
@@ -208,10 +208,10 @@ def analyze_meal(meal_txt: str) -> str:
                         - (사용 금지 예시) "너무 짜게 먹지 않게 주의하세요."
                       
                       [Severity 규칙]
-                      - Severity는 enum 형식이기 때문에, INFO / WARNING / ALERT 셋 중 하나로 저장해.
-                      - INFO: 전체적으로 균형 잡힌 식사이고, 과도한 위험 요소가 없을 때
-                      - WARNING: 탄수화물·나트륨·포화지방·당류·튀김·가공육 등 중 하나 이상이 많은 편일 때
-                      - ALERT: 매우 짜거나, 매우 기름지거나, 단 음식·가공육·튀김 위주의 식사처럼 건강에 뚜렷이 해로운 식사일 때
+                      - Severity는 enum 형식이기 때문에, GOOD / SOSO / BAD 셋 중 하나로 저장해.
+                      - GOOD: 전체적으로 균형 잡힌 식사이고, 과도한 위험 요소가 없을 때
+                      - SOSO: 탄수화물·나트륨·포화지방·당류·튀김·가공육 등 중 하나 이상이 많은 편일 때
+                      - BAD: 매우 짜거나, 매우 기름지거나, 단 음식·가공육·튀김 위주의 식사처럼 건강에 뚜렷이 해로운 식사일 때
                     
                       [출력 형식]
                       - 반드시 body 양식(JSON)과 동일한 key 구조를 유지해야 해.
@@ -287,7 +287,7 @@ if __name__ == "__main__":
             "age": 72,
             "userHeight": 160,
             "userWeight": 58,
-            "Gender": "여성",
+            "Gender": "female",
             "toics": [
                 {
                     "topicId": 1,

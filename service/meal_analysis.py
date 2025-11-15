@@ -25,6 +25,7 @@
 #    ]
 #  }
 #}
+# topictype: "ALLERGEN""HEALTH_GOAL""DISEASE_HISTORY"
 # --------------------
 
 
@@ -298,7 +299,7 @@ if __name__ == "__main__":
                 },
                 {
                     "topicId": 2,
-                    "topicType": "DISEASE",
+                    "topicType": "DISEASE_HISTORY",
                     "name": "고혈압",
                     "description": "나트륨 섭취 주의",
                     "source": "건강검진"

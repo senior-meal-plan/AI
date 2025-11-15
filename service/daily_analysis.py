@@ -57,6 +57,9 @@
 #  "callbackUrl": "string"
 #}
 
+# topictype: "ALLERGEN""HEALTH_GOAL""DISEASE_HISTORY"
+
+
 
 # --------------------
 # 환경설정
@@ -190,7 +193,7 @@ def score_sum(daily: dict, result: dict):
     topic_list = daily["whoAmIDto"]["topics"]
     disease_list = []
     for topic in topic_list:
-        if topic["topicType"] == "DISEASE":
+        if topic["topicType"] == "DISEASE_HISTORY":
             disease_list.append(topic["name"])
 
     for i in disease_list:
@@ -326,7 +329,7 @@ if __name__ == "__main__":
             "age": 65,
             "userHeight": 170,
             "userWeight": 78,
-            "Gender": "male",
+            "Gender": "MALE",
             "topics": [
               {
                 "topicId": 9007199254740991,
@@ -337,14 +340,14 @@ if __name__ == "__main__":
               },
               {
                 "topicId": 9007199254740992,
-                "topicType": "DISEASE",
+                "topicType": "DISEASE_HISTORY",
                 "name": "황반변성",
                 "description": "황반변성 질환",
                 "source": "string"
               },
               {
                 "topicId": 9007199254740993,
-                "topicType": "DISEASE",
+                "topicType": "DISEASE_HISTORY",
                 "name": "뼈 질환",
                 "description": "뼈 질환",
                 "source": "string"
@@ -354,12 +357,7 @@ if __name__ == "__main__":
           "meals": [
             {
             "mealType": "BREAKFAST",
-            "mealTime": {
-                "hour": 1073741824,
-                "minute": 1073741824,
-                "second": 1073741824,
-                "nano": 1073741824
-              },
+            "mealTime": 10:00:00
               "photoUrl": "string",
               "foods": [
                 {
@@ -404,12 +402,7 @@ if __name__ == "__main__":
             },
             {
             "mealType": "DINNER",
-            "mealTime": {
-                "hour": 1073741824,
-                "minute": 1073741824,
-                "second": 1073741824,
-                "nano": 1073741824
-              },
+            "mealTime": 10:00:00
               "photoUrl": "string",
               "foods": [
                 {

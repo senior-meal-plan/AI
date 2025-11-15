@@ -193,7 +193,7 @@ def score_sum(daily: dict, result: dict):
     topic_list = daily["whoAmIDto"]["topics"]
     disease_list = []
     for topic in topic_list:
-        if topic["topicType"] == "DISEASE_HISTORY":
+        if topic["topicType"] == "HEALTH_GOAL":
             disease_list.append(topic["name"])
 
     for i in disease_list:

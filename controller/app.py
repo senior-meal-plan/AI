@@ -78,8 +78,6 @@ async def send_weekly_analysis(weekly_data: dict):
             None, lambda: weekly_analysis(weekly_data)
         )
 
-        await asyncio.sleep(1)
-
         response = await loop.run_in_executor(
             None,
             lambda: requests.post(

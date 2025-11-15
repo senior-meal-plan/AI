@@ -65,7 +65,7 @@
 # 환경설정
 # --------------------
 
-import os, json, re, base64, io, requests
+import os, json, re, base64, io, requests, copy
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -292,7 +292,7 @@ def feedback(daily: dict, result: dict):
 # --------------------
 
 def daily_analysis(daily: dict):
-    result = body_format.copy()
+    result = copy.deepcopy(body_format)
     result["reportId"] = daily["reportId"]
 
     try:

@@ -1,5 +1,7 @@
 # 현재 깡통 상태임
 
+import copy
+
 body_format = {
   "UserId": 2,
   "weeklyReport": {
@@ -18,7 +20,7 @@ body_format = {
 }
 
 def weekly_analysis(weekly: dict):
-    result = body_format.copy()
+    result = copy.deepcopy(body_format)
     result["UserId"] = weekly["userDto"]["userId"]
     result["weeklyReport"]["WeeklyReportId"] = weekly["weeklyReportId"]
     return result

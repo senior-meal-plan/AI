@@ -96,12 +96,9 @@ async def send_weekly_analysis(weekly_data: dict):
 
 
 @app.post("/meals/analyze-and-send")
-async def analyze_meal_report(meal_list: list = Body(...)):
-    tasks = []
-    for meal in meal_list:
-        task = asyncio.create_task(send_meal_analysis(meal))
-        tasks.append(task)
-    return {"message": f"{len(tasks)} meals are being processed asynchronously."}
+async def analyze_meal_report(meal: dict = Body(...)):
+    asyncio.create_task(send_meal_analysis(meal))
+    return {"message": "1 meal is being processed asynchronously."}
 
 @app.post("/daily/analyze-and-send")
 async def analyze_daily_report(daily_list: list = Body(...)):

@@ -1,6 +1,3 @@
-# presigned URL 테스트하고 수정하면 끝
-
-
 # --------------------
 # 받는 데이터 형식:
 # {
@@ -40,7 +37,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
-
+from service.s3_utils import download_private_image
 
 # --------------------
 # LLM 설정 및 return body format 세팅
@@ -48,7 +45,6 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 load_dotenv()
 
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 llm = ChatOpenAI(
     model="gpt-4o",
     temperature=0.0,
@@ -110,11 +106,10 @@ body_format = """
 # --------------------
 
 def path_to_data_url(photoUrl: str, max_size: int = 1024) -> str:
-    resp = requests.get(photoUrl, timeout=15)
-    resp.raise_for_status()
 
-    img = Image.open(io.BytesIO(resp.content))
-    #img = Image.open(photoUrl)
+    img_bytes = download_private_image(photoUrl)
+
+    img = Image.open(io.BytesIO(img_bytes))
 
     if max(img.size) > max_size:
         ratio = max_size / max(img.size)
@@ -280,7 +275,7 @@ if __name__ == "__main__":
 
     test_meal = {
         "mealId": 12345,
-        "photoUrl": "보쌈.jpg",
+        "photoUrl": "presigned_url.png",
         "callbackUrl": "https://example.com/callback",
         "whoAmIDto": {
             "userId": 1001,
@@ -288,7 +283,7 @@ if __name__ == "__main__":
             "age": 72,
             "userHeight": 160,
             "userWeight": 58,
-            "Gender": "female",
+            "Gender": "FEMALE",
             "toics": [
                 {
                     "topicId": 1,

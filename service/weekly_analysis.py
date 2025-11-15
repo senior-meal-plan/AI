@@ -7,10 +7,10 @@ body_format = {
     "summaryGoodPoint": "이걸잘했음",
     "summaryBadPoint": "이걸못했음",
     "summaryAiRecommend": "물을 더 많이 먹으세요",
-    "severity": "INFO"
+    "severity": "SOSO"
   },
   "aiRecommendTopic": [
-    "2"
+    "고지혈증"
   ],
   "aiRecommendRecipe": [
     1

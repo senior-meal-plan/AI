@@ -100,10 +100,15 @@ body_format = """
 
 
 # --------------------
-# 사진을 읽어오는 함수
-# path_to_data_url : photoUrl을 받아서 용량을 축소하고 경로로 변환
+# 음식 내용을 읽어오는 함수
+# get_file_ext : photoUrl의 확장자 파악
+# path_to_data_url : photoUrl을 받아서 사진의 용량을 축소하고 경로로 변환
 # analyze_image_to_text : path_to_data_url에서 추출된 경로를 받아 사진을 텍스트 형태(밥 100g, 연어 50g...)로 변환
+# analyze_text_file : 처음부터 음식에 대한 정보가 텍스트로 들어왔을 경우 그것을 그대로 전달
 # --------------------
+
+def get_file_ext(url: str) -> str:
+    return url.lower().split("?")[0].split(".")[-1]
 
 def path_to_data_url(photoUrl: str, max_size: int = 1024) -> str:
 
@@ -173,6 +178,18 @@ def analyze_image_to_text(image_path: str) -> str:
     except Exception as e:
         print(f"API Error: {type(e).__name__}: {e}")
         raise
+
+def analyze_text_file(photoUrl: str) -> str:
+    # S3에서 파일 바이트 다운로드
+    file_bytes = download_private_image(photoUrl)
+    try:
+        text = file_bytes.decode("utf-8").strip()
+    except UnicodeDecodeError:
+        # utf-8 실패 시 다른 인코딩 자동 시도
+        text = file_bytes.decode("cp949", errors="ignore").strip()
+
+    print(f"텍스트 파일 분석 결과: {text}")
+    return text
 
 
 
@@ -256,7 +273,13 @@ def recompute_totals(d: dict) -> dict:
 # --------------------
 
 def meal_analysis(meal: dict):
-    meal_text = analyze_image_to_text(meal["photoUrl"])
+    photo_url = meal["photoUrl"]
+    ext = get_file_ext(photo_url)
+
+    if ext == "txt":
+        meal_text = analyze_text_file(photo_url)
+    else:
+        meal_text = analyze_image_to_text(meal["photoUrl"])
 
     json_str = analyze_meal(meal_text)
     result = load_json_safely(json_str)
@@ -275,7 +298,7 @@ if __name__ == "__main__":
 
     test_meal = {
         "mealId": 12345,
-        "photoUrl": "presigned_url.png",
+        "photoUrl": "식사.txt",
         "callbackUrl": "https://example.com/callback",
         "whoAmIDto": {
             "userId": 1001,

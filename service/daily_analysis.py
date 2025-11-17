@@ -62,7 +62,7 @@
 # 환경설정
 # --------------------
 
-import os, json, re, base64, io, requests, copy
+import os, json, copy
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
